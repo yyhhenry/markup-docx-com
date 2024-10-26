@@ -1,5 +1,6 @@
 import argparse
 import os
+import subprocess
 import tempfile
 from typing import Callable, Literal
 
@@ -7,7 +8,10 @@ import keyboard
 import pyperclip
 import win32com.client
 from pydantic import BaseModel
+from pythoncom import CoInitialize
+from win32api import MessageBox
 from win32com.client.dynamic import CDispatch
+from win32con import MB_ICONERROR
 
 
 class Args(BaseModel):
@@ -90,17 +94,20 @@ def call_pandoc(
     if not is_pandoc_in_path():
         raise Exception("Pandoc not found in PATH")
 
-    command = f"pandoc -f {from_format} -t {to_format} {input_file} -o {output_file}"
-    result = os.system(command)
-    if result != 0:
-        print(f"$ {command}")
-        raise Exception(f"Failed to convert {input_file} to {output_file}")
+    result = subprocess.run(
+        ["pandoc", "-f", from_format, "-t", to_format, input_file, "-o", output_file],
+        capture_output=True,
+        encoding="utf-8",
+    )
+
+    if result.returncode != 0:
+        message = result.stdout + result.stderr
+        MessageBox(0, message, "Error", MB_ICONERROR)
+        raise Exception(message)
 
 
 def convert_to_docx(text: str, insert_into_word: Callable[[str], None]):
     print(f"Converting {args.from_format} to docx...")
-    if not is_pandoc_in_path():
-        raise Exception("Pandoc not found in PATH")
 
     with tempfile.TemporaryDirectory() as temp_dir:
         ext = ext_from_format(args.from_format)
@@ -132,8 +139,6 @@ def insert_into_docx(word: CDispatch, docx_file: str, inline_block: bool):
 
 
 def on_triggered():
-    from pythoncom import CoInitialize
-
     CoInitialize()
     # Connect to the Word application
     word = win32com.client.Dispatch("Word.Application")
@@ -160,8 +165,11 @@ def on_triggered():
 
         insert_into_docx(word, docx_file, inline_block)
 
-    convert_to_docx(text, insert_into_word)
-    print("Done.")
+    try:
+        convert_to_docx(text, insert_into_word)
+        print("Done.")
+    except Exception as e:
+        print(e)
 
 
 keyboard.add_hotkey("ctrl+shift+t", on_triggered)
