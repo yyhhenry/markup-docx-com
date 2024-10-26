@@ -10,3 +10,8 @@ dependencies = [
     "pyperclip>=1.9.0",
     "pywin32>=308",
 ]
+
+[tool.uv]
+dev-dependencies = [
+    "pyinstaller>=6.11.0",
+]
