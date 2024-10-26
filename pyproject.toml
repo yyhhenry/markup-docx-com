@@ -1,0 +1,12 @@
+[project]
+name = "markup-docx-com"
+version = "0.1.0"
+description = "Use Markdown or Typst in Word documents"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "keyboard>=0.13.5",
+    "pydantic>=2.9.2",
+    "pyperclip>=1.9.0",
+    "pywin32>=308",
+]
