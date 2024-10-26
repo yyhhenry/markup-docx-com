@@ -12,11 +12,12 @@ from pythoncom import CoInitialize
 from win32api import MessageBox
 from win32com.client.dynamic import CDispatch
 from win32con import MB_ICONERROR
-from win32gui import GetForegroundWindow
+from win32gui import GetForegroundWindow, GetWindowText
 
 
 class Args(BaseModel):
     from_format: Literal["typst", "markdown_mmd", "html"]
+    word_title: str
 
 
 arg_parser = argparse.ArgumentParser()
@@ -25,6 +26,12 @@ arg_parser.add_argument(
     dest="from_format",
     default="typst",
     help="typst, markdown_mmd, html (default: typst)",
+)
+arg_parser.add_argument(
+    "--word-title",
+    dest="word_title",
+    default="{doc} - Word",
+    help="The title of the Word window (default: {doc} - Word)",
 )
 args_namespace = arg_parser.parse_args()
 args = Args.model_validate(args_namespace.__dict__)
@@ -137,21 +144,28 @@ def insert_into_docx(word: CDispatch, docx_file: str, inline_block: bool):
         selection.Style = style
 
 
-def connect_to_app() -> CDispatch:
+def connect_to_word(hwnd: int) -> CDispatch:
     CoInitialize()
-    # Connect to the Word application
-    word = win32com.client.GetObject(None, "Word.Application")
-    doc = word.ActiveDocument
-    print(f"\nActive document: {doc}")
+    try:
+        word = win32com.client.GetObject(None, "Word.Application")
+        doc = word.ActiveDocument
+        print(f"\nActive document: {doc}")
+    except Exception:
+        raise Exception("Please open a Word document.")
+
+    title = GetWindowText(hwnd)
+    expected_title = args.word_title.format(doc=doc.Name)
+    if title != expected_title:
+        raise Exception(f"Foreground window is not Word. {title=}")
     return word
 
 
 def on_triggered():
+    hwnd = GetForegroundWindow()
     try:
-        word = connect_to_app()
-    except Exception:
-        hwnd = GetForegroundWindow()
-        message = "Please open some document in Word first."
+        word = connect_to_word(hwnd)
+    except Exception as e:
+        message = str(e)
         MessageBox(hwnd, message, "Error", MB_ICONERROR)
         print(f"\n{message}")
         return
@@ -173,14 +187,14 @@ def on_triggered():
 
         print("Done.")
     except Exception as e:
-        hwnd = GetForegroundWindow()
-        MessageBox(hwnd, str(e), "Error", MB_ICONERROR)
-        print(e)
+        message = str(e)
+        MessageBox(hwnd, message, "Error", MB_ICONERROR)
+        print(message)
 
 
 keyboard.add_hotkey("ctrl+shift+3", on_triggered)
 
-print("Press Ctrl+Shift+3 to convert selected text to docx")
+print("Press Ctrl+# (Ctrl+Shift+3) to convert selected text to docx")
 
 
 keyboard.wait()
