@@ -2,7 +2,7 @@ import argparse
 import os
 import subprocess
 import tempfile
-from typing import Callable, Literal
+from typing import Literal
 
 import keyboard
 import pyperclip
@@ -106,18 +106,17 @@ def call_pandoc(
         raise Exception(message)
 
 
-def convert_to_docx(text: str, insert_into_word: Callable[[str], None]):
+def convert_to_docx(text: str, temp_dir: str):
     print(f"Converting {args.from_format} to docx...")
 
-    with tempfile.TemporaryDirectory() as temp_dir:
-        ext = ext_from_format(args.from_format)
-        source_code = os.path.join(temp_dir, "source." + ext)
-        with open(source_code, "w", encoding="utf-8") as f:
-            f.write(text)
+    ext = ext_from_format(args.from_format)
+    source_code = os.path.join(temp_dir, "source." + ext)
+    with open(source_code, "w", encoding="utf-8") as f:
+        f.write(text)
 
-        docx_file = os.path.join(temp_dir, "temp.docx")
-        call_pandoc(source_code, docx_file, args.from_format, "docx")
-        insert_into_word(docx_file)
+    docx_file = os.path.join(temp_dir, "temp.docx")
+    call_pandoc(source_code, docx_file, args.from_format, "docx")
+    return docx_file
 
 
 def insert_into_docx(word: CDispatch, docx_file: str, inline_block: bool):
@@ -138,16 +137,24 @@ def insert_into_docx(word: CDispatch, docx_file: str, inline_block: bool):
         selection.Style = style
 
 
+def connect_to_app() -> CDispatch:
+    CoInitialize()
+    # Connect to the Word application
+    word = win32com.client.Dispatch("Word.Application")
+    word.Visible = True
+    doc = word.ActiveDocument
+    print(f"\nActive document: {doc}")
+    return word
+
+
 def on_triggered():
     try:
-        CoInitialize()
-        # Connect to the Word application
-        word = win32com.client.Dispatch("Word.Application")
-        word.Visible = True
-        doc = word.ActiveDocument
-        print(f"\nActive document: {doc}")
+        word = connect_to_app()
     except Exception as e:
-        print(f"\nPlease open some document in Word first. \nError: `{e}`")
+        hwnd = GetForegroundWindow()
+        message = f"Please open some document in Word first.\nError: {e}"
+        MessageBox(hwnd, message, "Error", MB_ICONERROR)
+        print(f"\n{message}")
         return
 
     text, inline_block = (
@@ -160,17 +167,11 @@ def on_triggered():
 
     text = text_filter(text)
 
-    def insert_into_word(docx_file: str):
-        # Copy to Download folder
-        from shutil import copy
-
-        download_folder = os.path.expanduser("~/Downloads")
-        copy(docx_file, download_folder)
-
-        insert_into_docx(word, docx_file, inline_block)
-
     try:
-        convert_to_docx(text, insert_into_word)
+        with tempfile.TemporaryDirectory() as temp_dir:
+            docx_file = convert_to_docx(text, temp_dir)
+            insert_into_docx(word, docx_file, inline_block)
+
         print("Done.")
     except Exception as e:
         hwnd = GetForegroundWindow()
