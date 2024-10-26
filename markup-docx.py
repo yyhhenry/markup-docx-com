@@ -74,6 +74,13 @@ def get_clipboard_text() -> tuple[str, bool] | None:
         return text, inline_block
 
 
+def text_filter(text: str) -> str:
+    # Word 会自动把直引号转换为左右引号，这里转换回来
+    text = text.replace("“", '"').replace("”", '"')
+    # Todo: 更多的过滤规则
+    return text
+
+
 def call_pandoc(
     input_file: str,
     output_file: str,
@@ -143,6 +150,8 @@ def on_triggered():
         print("No text to convert")
         return
 
+    text = text_filter(text)
+
     def insert_into_word(docx_file: str):
         # Copy to Download folder
         from shutil import copy
@@ -159,5 +168,6 @@ def on_triggered():
 keyboard.add_hotkey("ctrl+shift+t", on_triggered)
 
 print("Press Ctrl+Shift+T to convert selected text to docx")
+
 
 keyboard.wait()
