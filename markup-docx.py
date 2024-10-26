@@ -121,13 +121,12 @@ def insert_into_docx(word: CDispatch, docx_file: str, inline_block: bool):
         print(f"{style=}")
 
     selection.InsertFile(docx_file)
-    print(f"{selection.Text=}")
 
     # Remove additional line break at the end of the inserted text
     if inline_block:
         selection.MoveLeft()
         text = selection.Text
-        assert text == "\r", f"{text=}"
+        assert text == "\r", f"Expected '\\r', got '{text}'"
         selection.Delete()
         selection.Style = style
 
