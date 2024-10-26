@@ -139,12 +139,16 @@ def insert_into_docx(word: CDispatch, docx_file: str, inline_block: bool):
 
 
 def on_triggered():
-    CoInitialize()
-    # Connect to the Word application
-    word = win32com.client.Dispatch("Word.Application")
-    word.Visible = True
-    doc = word.ActiveDocument
-    print(f"\nActive document: {doc}")
+    try:
+        CoInitialize()
+        # Connect to the Word application
+        word = win32com.client.Dispatch("Word.Application")
+        word.Visible = True
+        doc = word.ActiveDocument
+        print(f"\nActive document: {doc}")
+    except Exception as e:
+        print(f"\nPlease open some document in Word first. \nError: `{e}`")
+        return
 
     text, inline_block = (
         get_selection_text(word) or get_clipboard_text() or (None, False)
