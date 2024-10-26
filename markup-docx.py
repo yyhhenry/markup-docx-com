@@ -140,8 +140,7 @@ def insert_into_docx(word: CDispatch, docx_file: str, inline_block: bool):
 def connect_to_app() -> CDispatch:
     CoInitialize()
     # Connect to the Word application
-    word = win32com.client.Dispatch("Word.Application")
-    word.Visible = True
+    word = win32com.client.GetObject(None, "Word.Application")
     doc = word.ActiveDocument
     print(f"\nActive document: {doc}")
     return word
@@ -150,9 +149,9 @@ def connect_to_app() -> CDispatch:
 def on_triggered():
     try:
         word = connect_to_app()
-    except Exception as e:
+    except Exception:
         hwnd = GetForegroundWindow()
-        message = f"Please open some document in Word first.\nError: {e}"
+        message = "Please open some document in Word first."
         MessageBox(hwnd, message, "Error", MB_ICONERROR)
         print(f"\n{message}")
         return
@@ -179,9 +178,9 @@ def on_triggered():
         print(e)
 
 
-keyboard.add_hotkey("ctrl+shift+t", on_triggered)
+keyboard.add_hotkey("ctrl+shift+3", on_triggered)
 
-print("Press Ctrl+Shift+T to convert selected text to docx")
+print("Press Ctrl+Shift+3 to convert selected text to docx")
 
 
 keyboard.wait()
