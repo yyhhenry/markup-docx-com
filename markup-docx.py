@@ -98,6 +98,9 @@ def text_filter(text: str) -> str:
         text = text.replace("“", '"').replace("”", '"')
         text = text.replace("‘", "'").replace("’", "'")
 
+    # Normalize line endings
+    text = text.replace("\r\n", "\n").replace("\r", "\n")
+
     return text
 
 
