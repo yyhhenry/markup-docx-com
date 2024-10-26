@@ -77,8 +77,6 @@ def get_selection_text(word: CDispatch) -> tuple[str, bool] | None:
         if inline_block and selection.End == selection.Paragraphs.Last.Range.End:
             # Don't include the last line break
             selection.End = selection.End - 1
-
-        print(f"{text=}")
         return text, inline_block
 
 
@@ -89,7 +87,6 @@ def get_clipboard_text() -> tuple[str, bool] | None:
         return None
     else:
         inline_block = text.strip().find("\n") == -1
-        print(f"{text=}")
         return text, inline_block
 
 
@@ -190,6 +187,10 @@ def on_triggered():
         return
 
     text = text_filter(text)
+
+    print("Code:")
+    for idx, line in enumerate(text.strip().split("\n")):
+        print(f"{idx:3}| {line}")
 
     try:
         with tempfile.TemporaryDirectory() as temp_dir:
