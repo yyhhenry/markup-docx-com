@@ -12,6 +12,7 @@ from pythoncom import CoInitialize
 from win32api import MessageBox
 from win32com.client.dynamic import CDispatch
 from win32con import MB_ICONERROR
+from win32gui import GetForegroundWindow
 
 
 class Args(BaseModel):
@@ -102,7 +103,6 @@ def call_pandoc(
 
     if result.returncode != 0:
         message = result.stdout + result.stderr
-        MessageBox(0, message, "Error", MB_ICONERROR)
         raise Exception(message)
 
 
@@ -169,6 +169,8 @@ def on_triggered():
         convert_to_docx(text, insert_into_word)
         print("Done.")
     except Exception as e:
+        hwnd = GetForegroundWindow()
+        MessageBox(hwnd, str(e), "Error", MB_ICONERROR)
         print(e)
 
 

@@ -14,10 +14,12 @@ options:
 
 ## Development
 
-```bash
+```ps1
 # Run
 uv run markup-docx.py
 
 # Build
 uv run -- pyinstaller --onefile markup-docx.py
+# Then put the executable in the PATH, e.g.:
+# cp dist/markup-docx.exe $HOME/src/bin/markup-docx.exe
 ```
