@@ -5,11 +5,13 @@ Use Markdown or Typst in Word documents
 ## Usage
 
 ```txt
-usage: markup-docx.py [-h] [--from FROM_FORMAT]
+usage: markup-docx.py [-h] [--from FROM_FORMAT] [--word-title WORD_TITLE]
 
 options:
-  -h, --help          show this help message and exit
-  --from FROM_FORMAT  typst, markdown_mmd, html (default: typst)
+  -h, --help            show this help message and exit
+  --from FROM_FORMAT    typst, markdown_mmd, html (default: typst)
+  --word-title WORD_TITLE
+                        The title of the Word window (default: {doc} - Word)
 ```
 
 ## Development
