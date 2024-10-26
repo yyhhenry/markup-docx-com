@@ -18,6 +18,7 @@ from win32gui import GetForegroundWindow, GetWindowText
 class Args(BaseModel):
     from_format: Literal["typst", "markdown_mmd", "html"]
     word_title: str
+    force_straight_quotes: bool
 
 
 arg_parser = argparse.ArgumentParser()
@@ -32,6 +33,12 @@ arg_parser.add_argument(
     dest="word_title",
     default="{doc} - Word",
     help="The title of the Word window (default: {doc} - Word)",
+)
+arg_parser.add_argument(
+    "--force-straight-quotes",
+    dest="force_straight_quotes",
+    action="store_true",
+    help="Replace curly quotes with straight quotes",
 )
 args_namespace = arg_parser.parse_args()
 args = Args.model_validate(args_namespace.__dict__)
@@ -87,9 +94,10 @@ def get_clipboard_text() -> tuple[str, bool] | None:
 
 
 def text_filter(text: str) -> str:
-    # Word 会自动把直引号转换为左右引号，这里转换回来
-    text = text.replace("“", '"').replace("”", '"')
-    # Todo: 更多的过滤规则
+    if args.force_straight_quotes:
+        text = text.replace("“", '"').replace("”", '"')
+        text = text.replace("‘", "'").replace("’", "'")
+
     return text
 
 
@@ -195,6 +203,13 @@ def on_triggered():
 keyboard.add_hotkey("ctrl+shift+3", on_triggered)
 
 print("Press Ctrl+# (Ctrl+Shift+3) to convert selected text to docx")
+
+print("\n提示 (zh-CN):")
+print("- 当 Word 在前台时，按 Ctrl+# 可以将选中内容作为标记语言并替换为编译结果")
+print("- 确保 pandoc 已安装并在 PATH 中")
+print("- 打开 选项-校对-自动更正选项，检查不适合代码的自动更正")
+print("  - 在自动套用格式和键入时自动套用格式中，关闭“直引号”自动更正")
+print("  - 关闭首字母大写自动更正，以方便代码块输入")
 
 
 keyboard.wait()
