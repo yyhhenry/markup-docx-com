@@ -91,12 +91,14 @@ def get_clipboard_text() -> tuple[str, bool] | None:
 
 
 def text_filter(text: str) -> str:
+    # Normalize line endings
+    text = text.replace("\r\n", "\n").replace("\r", "\n")
+    # Shift+Enter in Word, text of soft line break is '\x0b' (Vertical Tab in ASCII)
+    text = text.replace("\x0b", "\n")
+
     if args.force_straight_quotes:
         text = text.replace("“", '"').replace("”", '"')
         text = text.replace("‘", "'").replace("’", "'")
-
-    # Normalize line endings
-    text = text.replace("\r\n", "\n").replace("\r", "\n")
 
     return text
 
