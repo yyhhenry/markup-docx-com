@@ -16,23 +16,31 @@ from win32gui import GetForegroundWindow, GetWindowText
 
 
 class Args(BaseModel):
-    from_format: Literal["typst", "markdown_mmd", "html"]
-    word_title: str
+    from_format: Literal["typst", "md", "markdown_mmd", "html"]
+    wps: bool
+    title: str | None
     force_straight_quotes: bool
 
 
 arg_parser = argparse.ArgumentParser()
 arg_parser.add_argument(
-    "--from",
+    "-f",
+    "--from-format",
     dest="from_format",
     default="typst",
-    help="typst, markdown_mmd, html (default: typst)",
+    help="typst, md (markdown_mmd), html (default: typst)",
 )
 arg_parser.add_argument(
-    "--word-title",
-    dest="word_title",
-    default="{doc} - Word",
-    help="The title of the Word window (default: {doc} - Word)",
+    "--wps",
+    dest="wps",
+    action="store_true",
+    help="Use WPS Office instead of Word",
+)
+arg_parser.add_argument(
+    "--title",
+    dest="title",
+    default=None,
+    help="The title of the Word window (default: `{doc} - Word` or `{doc} - WPS Office` if --wps is set)",
 )
 arg_parser.add_argument(
     "--force-straight-quotes",
@@ -44,6 +52,18 @@ args_namespace = arg_parser.parse_args()
 args = Args.model_validate(args_namespace.__dict__)
 
 print(f"Auto-converting from {args.from_format} to docx")
+
+
+def get_app_name(wps: bool) -> str:
+    return "WPS Office" if wps else "Word"
+
+
+app_name = get_app_name(args.wps)
+if args.title is None:
+    args.title = f"{{doc}} - {app_name}"
+
+if args.from_format == "md":
+    args.from_format = "markdown_mmd"
 
 
 def ext_from_format(format: str) -> str:
@@ -138,6 +158,7 @@ def convert_to_docx(text: str, temp_dir: str):
 
 def insert_into_docx(word: CDispatch, docx_file: str, inline_block: bool):
     selection = word.Selection
+    style = None
     if inline_block:
         # Get the style of the current selection
         style = selection.Style()
@@ -164,9 +185,10 @@ def connect_to_word(hwnd: int) -> CDispatch:
         raise Exception("Please open a Word document.")
 
     title = GetWindowText(hwnd)
-    expected_title = args.word_title.format(doc=doc.Name)
+    assert args.title is not None, "Title is not set"
+    expected_title = args.title.format(doc=doc.Name)
     if title != expected_title:
-        raise Exception(f"Foreground window is not Word. {title=}")
+        raise Exception(f"Foreground window is not Word. {title=}, {expected_title=}")
     return word
 
 
@@ -210,8 +232,10 @@ keyboard.add_hotkey("ctrl+shift+3", on_triggered)
 
 print("Press Ctrl+# (Ctrl+Shift+3) to convert selected text to docx")
 
+
 print("\n提示 (zh-CN):")
-print("- 当 Word 在前台时，按 Ctrl+# 可以将选中内容作为标记语言并替换为编译结果")
+print(f"- 当 {app_name} 在前台时，按 Ctrl+# 可以将选中内容作为标记语言并替换为编译结果")
+print(f"- 请勿同时打开 {get_app_name(not args.wps)}，否则可能会导致错误")
 print("- 确保 pandoc 已安装并在 PATH 中")
 print("- 打开 选项-校对-自动更正选项，检查不适合代码的自动更正")
 print("  - 在自动套用格式和键入时自动套用格式中，关闭“直引号”自动更正")
