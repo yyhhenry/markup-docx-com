@@ -14,7 +14,7 @@ jobs:
         with:
           python-version: "3.10"
       - name: Install uv
-        run: powershell -c "irm https://astral.sh/uv/install.ps1 | more"
+        uses: astral-sh/setup-uv@v5
       - name: Build
         run: uv run -- pyinstaller --onefile markup-docx.py
       - name: Upload wheels
