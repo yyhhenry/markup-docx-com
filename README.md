@@ -1,6 +1,6 @@
 # markup-docx-com
 
-Use Markdown or Typst in Word documents
+Use Markdown or Typst in Word/WPS documents
 
 ## Usage
 
@@ -19,8 +19,8 @@ options:
 
 提示 (zh-CN):
 
-- 当 Word 在前台时，按 Ctrl+# 可以将选中内容作为标记语言并替换为编译结果
-- 请勿同时打开 WPS Office，否则可能会导致错误
+- 当 Word (/ WPS) 在前台时，按 Ctrl+# 可以将选中内容作为标记语言并替换为编译结果
+- 请勿同时打开 WPS (/ Word)，否则可能会导致错误
 - 确保 pandoc 已安装并在 PATH 中
 - 打开 选项-校对-自动更正选项，检查不适合代码的自动更正
   - 在自动套用格式和键入时自动套用格式中，关闭“直引号”自动更正
