@@ -3,7 +3,7 @@ name = "markup-docx-com"
 version = "0.1.0"
 description = "Use Markdown or Typst in Word documents"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 dependencies = [
     "keyboard>=0.13.5",
     "pydantic>=2.9.2",
@@ -12,6 +12,4 @@ dependencies = [
 ]
 
 [tool.uv]
-dev-dependencies = [
-    "pyinstaller>=6.11.0",
-]
+dev-dependencies = ["pyinstaller>=6.11.0"]
